@@ -1,5 +1,5 @@
-import { systemState } from "./state.js";
-import { config } from "./config.js";
+import { systemState } from './state.js';
+import { config } from './config.js';
 
 export interface EndpointMetric {
   total: number;
@@ -59,11 +59,7 @@ class MetricsCollector {
     this.seedInitialMetrics();
   }
 
-  public recordRequest(
-    endpoint: string,
-    statusCode: number,
-    latencyMs: number,
-  ): void {
+  public recordRequest(endpoint: string, statusCode: number, latencyMs: number): void {
     this.totalRequests++;
 
     if (statusCode >= 200 && statusCode < 400) {
@@ -117,37 +113,29 @@ class MetricsCollector {
 
     const errorCount = this.clientError4xx + this.serverError5xx;
     const errorRate =
-      this.totalRequests > 0
-        ? Math.round((errorCount / this.totalRequests) * 10000) / 100
-        : 0.0;
+      this.totalRequests > 0 ? Math.round((errorCount / this.totalRequests) * 10000) / 100 : 0.0;
 
     // Resource calculations: simulate memory pressure when active
     let memoryUsageMb = 135.2; // nominal baseline
     let cpuPercent = 14.2;
 
-    if (incident.activeIncident === "memory_pressure") {
+    if (incident.activeIncident === 'memory_pressure') {
       memoryUsageMb = 485.6; // 94.8% of 512MB
       cpuPercent = 84.5;
-    } else if (incident.activeIncident === "high_latency") {
+    } else if (incident.activeIncident === 'high_latency') {
       cpuPercent = 42.1;
     }
 
     const memoryLimitMb = config.cgroupMemoryLimitMb;
-    const memoryPercent =
-      Math.round((memoryUsageMb / memoryLimitMb) * 1000) / 10;
+    const memoryPercent = Math.round((memoryUsageMb / memoryLimitMb) * 1000) / 10;
 
-    const epBreakdown: Record<
-      string,
-      { total: number; errors: number; avg_latency_ms: number }
-    > = {};
+    const epBreakdown: Record<string, { total: number; errors: number; avg_latency_ms: number }> =
+      {};
     for (const [name, stats] of this.endpointStats.entries()) {
       const epAvg =
         stats.latencies.length > 0
-          ? Math.round(
-              (stats.latencies.reduce((a, b) => a + b, 0) /
-                stats.latencies.length) *
-                10,
-            ) / 10
+          ? Math.round((stats.latencies.reduce((a, b) => a + b, 0) / stats.latencies.length) * 10) /
+            10
           : 0;
       epBreakdown[name] = {
         total: stats.total,
@@ -158,8 +146,8 @@ class MetricsCollector {
 
     // Determine reported version (in bad_deployment incident, report bad version)
     const currentVersion =
-      incident.activeIncident === "bad_deployment"
-        ? (incident.details.badVersion as string) || "v2.4.2-buggy"
+      incident.activeIncident === 'bad_deployment'
+        ? (incident.details.badVersion as string) || 'v2.4.2-buggy'
         : config.serviceVersion;
 
     return {
@@ -207,9 +195,9 @@ class MetricsCollector {
     // Seed baseline healthy requests
     const initialSamples = [12, 15, 18, 22, 25, 28, 32, 35, 40, 48, 55, 62];
     for (const lat of initialSamples) {
-      this.recordRequest("/health", 200, lat);
-      this.recordRequest("/api/users", 200, lat + 8);
-      this.recordRequest("/api/orders", 200, lat + 14);
+      this.recordRequest('/health', 200, lat);
+      this.recordRequest('/api/users', 200, lat + 8);
+      this.recordRequest('/api/orders', 200, lat + 14);
     }
   }
 }

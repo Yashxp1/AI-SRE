@@ -48,7 +48,7 @@ class InMemLogBuffer {
       statusCode: options.statusCode,
       message,
       stackTrace: options.stackTrace,
-      context: options.context
+      context: options.context,
     };
 
     this.logs.push(entry);
@@ -61,7 +61,7 @@ class InMemLogBuffer {
       INFO: '\x1b[36m',
       WARN: '\x1b[33m',
       ERROR: '\x1b[31m',
-      FATAL: '\x1b[35m'
+      FATAL: '\x1b[35m',
     };
     const reset = '\x1b[0m';
     console.log(
@@ -78,16 +78,16 @@ class InMemLogBuffer {
     let filtered = [...this.logs];
 
     if (options.level) {
-      filtered = filtered.filter(l => l.level === options.level);
+      filtered = filtered.filter((l) => l.level === options.level);
     }
 
     if (options.endpoint) {
-      filtered = filtered.filter(l => l.endpoint && l.endpoint.includes(options.endpoint!));
+      filtered = filtered.filter((l) => l.endpoint && l.endpoint.includes(options.endpoint!));
     }
 
     if (options.sinceSeconds && options.sinceSeconds > 0) {
       const cutoff = Date.now() - options.sinceSeconds * 1000;
-      filtered = filtered.filter(l => new Date(l.timestamp).getTime() >= cutoff);
+      filtered = filtered.filter((l) => new Date(l.timestamp).getTime() >= cutoff);
     }
 
     // Return the latest logs first
@@ -96,7 +96,7 @@ class InMemLogBuffer {
 
     return {
       total: filtered.length,
-      logs: paginated
+      logs: paginated,
     };
   }
 
@@ -107,14 +107,52 @@ class InMemLogBuffer {
 
   private seedInitialLogs(): void {
     const now = Date.now();
-    const seedEvents: Array<{ offsetMs: number; level: LogLevel; msg: string; endpoint?: string; status?: number }> = [
-      { offsetMs: 300000, level: 'INFO', msg: 'Service order-service v2.4.1 initialized successfully on port 8000' },
-      { offsetMs: 280000, level: 'INFO', msg: 'Connected to primary PostgreSQL cluster at pgsql-master.internal:5432 (pool size: 20)' },
+    const seedEvents: Array<{
+      offsetMs: number;
+      level: LogLevel;
+      msg: string;
+      endpoint?: string;
+      status?: number;
+    }> = [
+      {
+        offsetMs: 300000,
+        level: 'INFO',
+        msg: 'Service order-service v2.4.1 initialized successfully on port 8000',
+      },
+      {
+        offsetMs: 280000,
+        level: 'INFO',
+        msg: 'Connected to primary PostgreSQL cluster at pgsql-master.internal:5432 (pool size: 20)',
+      },
       { offsetMs: 250000, level: 'INFO', msg: 'Redis cache pool connected, ping latency 0.8ms' },
-      { offsetMs: 210000, level: 'INFO', msg: 'Health probe status: HEALTHY', endpoint: '/health', status: 200 },
-      { offsetMs: 180000, level: 'INFO', msg: 'User session verified for user_id=usr_102', endpoint: '/api/users', status: 200 },
-      { offsetMs: 120000, level: 'INFO', msg: 'Order ord-9921 processed and persisted to storage', endpoint: '/api/orders', status: 200 },
-      { offsetMs: 60000, level: 'INFO', msg: 'Routine health check passed (cpu: 11%, memory: 128MB/512MB)', endpoint: '/health', status: 200 }
+      {
+        offsetMs: 210000,
+        level: 'INFO',
+        msg: 'Health probe status: HEALTHY',
+        endpoint: '/health',
+        status: 200,
+      },
+      {
+        offsetMs: 180000,
+        level: 'INFO',
+        msg: 'User session verified for user_id=usr_102',
+        endpoint: '/api/users',
+        status: 200,
+      },
+      {
+        offsetMs: 120000,
+        level: 'INFO',
+        msg: 'Order ord-9921 processed and persisted to storage',
+        endpoint: '/api/orders',
+        status: 200,
+      },
+      {
+        offsetMs: 60000,
+        level: 'INFO',
+        msg: 'Routine health check passed (cpu: 11%, memory: 128MB/512MB)',
+        endpoint: '/health',
+        status: 200,
+      },
     ];
 
     for (const seed of seedEvents) {
@@ -125,11 +163,10 @@ class InMemLogBuffer {
         service: 'order-service',
         endpoint: seed.endpoint,
         statusCode: seed.status,
-        message: seed.msg
+        message: seed.msg,
       });
     }
   }
 }
 
 export const logger = new InMemLogBuffer();
-
