@@ -7,4 +7,3 @@ metricsRouter.get('/', (req: Request, res: Response) => {
   const snapshot = metricsCollector.getSnapshot();
   res.status(200).json(snapshot);
 });
-

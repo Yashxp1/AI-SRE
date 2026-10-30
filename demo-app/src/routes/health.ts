@@ -13,7 +13,8 @@ healthRouter.get('/', (req: Request, res: Response) => {
     logger.append('ERROR', 'Health check probe FAILED: downstream services unreachable', {
       endpoint: '/health',
       statusCode: 503,
-      stackTrace: 'Error: ServiceUnavailable\n    at checkHealth (/app/src/routes/health.ts:22:15)\n    at Layer.handle [as handle_request] (express/lib/router/layer.js:95:5)'
+      stackTrace:
+        'Error: ServiceUnavailable\n    at checkHealth (/app/src/routes/health.ts:22:15)\n    at Layer.handle [as handle_request] (express/lib/router/layer.js:95:5)',
     });
 
     return res.status(503).json({
@@ -26,9 +27,9 @@ healthRouter.get('/', (req: Request, res: Response) => {
         database: 'DOWN',
         api_gateway: 'UNREACHABLE',
         cache: 'DEGRADED',
-        disk: 'UP'
+        disk: 'UP',
       },
-      error: 'Critical dependencies are down: health check probes failed on 2 subsystem targets'
+      error: 'Critical dependencies are down: health check probes failed on 2 subsystem targets',
     });
   }
 
@@ -42,9 +43,9 @@ healthRouter.get('/', (req: Request, res: Response) => {
       checks: {
         database: 'TIMEOUT: connection to db-primary.internal:5432 timed out after 5000ms',
         cache: 'UP',
-        disk: 'UP'
+        disk: 'UP',
       },
-      error: 'Database connection pool timed out'
+      error: 'Database connection pool timed out',
     });
   }
 
@@ -57,8 +58,7 @@ healthRouter.get('/', (req: Request, res: Response) => {
     checks: {
       database: 'UP',
       cache: 'UP',
-      disk: 'UP'
-    }
+      disk: 'UP',
+    },
   });
 });
-

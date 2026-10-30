@@ -18,6 +18,5 @@ export const config: AppConfig = {
   serviceVersion: process.env.SERVICE_VERSION || 'v2.4.1',
   adminApiKey: process.env.ADMIN_API_KEY || 'sre-demo-secret-key-2026',
   allowLocalAdmin: (process.env.ALLOW_LOCAL_ADMIN || 'true').toLowerCase() === 'true',
-  cgroupMemoryLimitMb: parseFloat(process.env.CGROUP_MEMORY_LIMIT_MB || '512.0')
+  cgroupMemoryLimitMb: parseFloat(process.env.CGROUP_MEMORY_LIMIT_MB || '512.0'),
 };
-

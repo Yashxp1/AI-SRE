@@ -54,8 +54,8 @@ app.use((req, res) => {
       'GET /api/metrics',
       'GET /api/deployments',
       'POST /admin/incidents/:type',
-      'POST /admin/reset'
-    ]
+      'POST /admin/reset',
+    ],
   });
 });
 
@@ -79,4 +79,3 @@ process.on('SIGTERM', () => {
 });
 
 export default app;
-

@@ -26,8 +26,8 @@ const BASE_DEPLOYMENTS: DeploymentRecord[] = [
     changelog: [
       'fix: optimize event queue batching',
       'chore: update node runtime dependencies',
-      'perf: index query on customer_orders table'
-    ]
+      'perf: index query on customer_orders table',
+    ],
   },
   {
     id: 'dep-9750',
@@ -40,9 +40,9 @@ const BASE_DEPLOYMENTS: DeploymentRecord[] = [
     changelog: [
       'feat: support EUR and GBP currency conversions',
       'refactor: extract tax rules to separate micro-module',
-      'docs: update API documentation for orders schema'
-    ]
-  }
+      'docs: update API documentation for orders schema',
+    ],
+  },
 ];
 
 deploymentsRouter.get('/', (req: Request, res: Response) => {
@@ -52,7 +52,8 @@ deploymentsRouter.get('/', (req: Request, res: Response) => {
   if (incident.activeIncident === 'bad_deployment') {
     const badVersion = (incident.details.badVersion as string) || 'v2.4.2-buggy';
     const commitHash = (incident.details.commitHash as string) || 'f92a3c1';
-    const badDeploymentTime = incident.startedAt || new Date(Date.now() - 3 * 60 * 1000).toISOString();
+    const badDeploymentTime =
+      incident.startedAt || new Date(Date.now() - 3 * 60 * 1000).toISOString();
 
     deployments.unshift({
       id: 'dep-9904',
@@ -64,8 +65,8 @@ deploymentsRouter.get('/', (req: Request, res: Response) => {
       summary: 'feat(billing): rapid discount pricing hotfix',
       changelog: [
         'feat: implement dynamic discount formula in discount_calculator.ts',
-        'refactor: simplify checkout total aggregation'
-      ]
+        'refactor: simplify checkout total aggregation',
+      ],
     });
   }
 
@@ -73,7 +74,6 @@ deploymentsRouter.get('/', (req: Request, res: Response) => {
     service: 'order-service',
     current_version: deployments[0].version,
     total: deployments.length,
-    deployments
+    deployments,
   });
 });
-

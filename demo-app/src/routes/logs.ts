@@ -5,15 +5,19 @@ export const logsRouter = Router();
 
 logsRouter.get('/', (req: Request, res: Response) => {
   const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
-  const level = req.query.level ? (req.query.level as string).toUpperCase() as LogLevel : undefined;
+  const level = req.query.level
+    ? ((req.query.level as string).toUpperCase() as LogLevel)
+    : undefined;
   const endpoint = req.query.endpoint as string | undefined;
-  const sinceSeconds = req.query.since_seconds ? parseInt(req.query.since_seconds as string, 10) : undefined;
+  const sinceSeconds = req.query.since_seconds
+    ? parseInt(req.query.since_seconds as string, 10)
+    : undefined;
 
   const result = logger.query({
     limit,
     level,
     endpoint,
-    sinceSeconds
+    sinceSeconds,
   });
 
   res.status(200).json({
@@ -23,9 +27,8 @@ logsRouter.get('/', (req: Request, res: Response) => {
       limit,
       level: level || 'ALL',
       endpoint: endpoint || 'ALL',
-      since_seconds: sinceSeconds || 'ALL'
+      since_seconds: sinceSeconds || 'ALL',
     },
-    logs: result.logs
+    logs: result.logs,
   });
 });
-
