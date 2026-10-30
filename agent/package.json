@@ -1,26 +1,41 @@
 {
-  "name": "agent",
+  "name": "ai-sre-agent",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Autonomous AI Site Reliability Engineer Agent for Incident Diagnosis and Root Cause Analysis",
+  "main": "dist/index.js",
+  "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "start": "node dist/index.js"
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "investigate": "tsx src/cli.ts",
+    "benchmark": "tsx src/eval/benchmark.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "prettier --check ."
   },
-  "keywords": [],
+  "keywords": [
+    "ai-sre",
+    "agentic-ai",
+    "incident-diagnosis",
+    "rca",
+    "gemini"
+  ],
   "author": "",
   "license": "ISC",
-  "type": "module",
+  "dependencies": {
+    "@google/genai": "^2.32.0",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "zod": "^3.24.2"
+  },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.6",
+    "prettier": "^3.9.10",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
-  },
-  "dependencies": {
-    "cors": "^2.8.6",
-    "dotenv": "^18.0.9",
-    "express": "^5.3.0"
   }
 }
