@@ -21,8 +21,7 @@
         box-sizing: border-box;
         margin: 0;
         padding: 0;
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
       }
       body {
         background: var(--bg);
@@ -252,9 +251,7 @@
       <div class="card">
         <h3>Memory Pressure</h3>
         <div class="val" id="metric-memory">135 MB</div>
-        <div class="sub" id="metric-memory-pct">
-          26.4% of 512 MB cgroup limit
-        </div>
+        <div class="sub" id="metric-memory-pct">26.4% of 512 MB cgroup limit</div>
       </div>
       <div class="card">
         <h3>Active Version</h3>
@@ -266,16 +263,10 @@
     <!-- Incident Injection Control Panel -->
     <div class="section-title">
       <span>Simulate Incidents (Admin Injection)</span>
-      <button class="btn btn-reset" onclick="resetIncident()">
-        ↺ Restore Normal Operation
-      </button>
+      <button class="btn btn-reset" onclick="resetIncident()">↺ Restore Normal Operation</button>
     </div>
     <div class="incidents-grid">
-      <button
-        class="btn btn-incident"
-        id="btn-http_500"
-        onclick="triggerIncident('http_500')"
-      >
+      <button class="btn btn-incident" id="btn-http_500" onclick="triggerIncident('http_500')">
         💥 1. HTTP 500 errors
         <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px">
           NullPointer in payment serializer
@@ -350,28 +341,19 @@
           <span>Endpoint Inspector</span>
         </div>
         <div class="test-buttons">
-          <button class="btn btn-test" onclick="probeEndpoint('/health')">
-            GET /health
-          </button>
+          <button class="btn btn-test" onclick="probeEndpoint('/health')">GET /health</button>
           <button class="btn btn-test" onclick="probeEndpoint('/api/orders')">
             GET /api/orders
           </button>
-          <button class="btn btn-test" onclick="probeEndpoint('/api/users')">
-            GET /api/users
-          </button>
+          <button class="btn btn-test" onclick="probeEndpoint('/api/users')">GET /api/users</button>
           <button class="btn btn-test" onclick="probeEndpoint('/api/metrics')">
             GET /api/metrics
           </button>
-          <button
-            class="btn btn-test"
-            onclick="probeEndpoint('/api/deployments')"
-          >
+          <button class="btn btn-test" onclick="probeEndpoint('/api/deployments')">
             GET /api/deployments
           </button>
         </div>
-        <pre id="response-output">
-// Click an endpoint above to probe current response...</pre
-        >
+        <pre id="response-output">// Click an endpoint above to probe current response...</pre>
       </div>
 
       <div>
@@ -392,105 +374,92 @@
     </div>
 
     <script>
-      const ADMIN_KEY = "sre-demo-secret-key-2026";
+      const ADMIN_KEY = 'sre-demo-secret-key-2026';
 
       async function refreshMetrics() {
         try {
-          const res = await fetch("/api/metrics");
+          const res = await fetch('/api/metrics');
           const data = await res.json();
 
-          document.getElementById("metric-error-rate").innerText =
-            data.requests.error_rate_percentage + "%";
-          document.getElementById("metric-errors-count").innerText =
+          document.getElementById('metric-error-rate').innerText =
+            data.requests.error_rate_percentage + '%';
+          document.getElementById('metric-errors-count').innerText =
             `${data.requests.client_error_4xx + data.requests.server_error_5xx} / ${data.requests.total} failed requests`;
-          document.getElementById("metric-p95").innerText =
-            data.latency_ms.p95 + "ms";
-          document.getElementById("metric-avg-latency").innerText =
+          document.getElementById('metric-p95').innerText = data.latency_ms.p95 + 'ms';
+          document.getElementById('metric-avg-latency').innerText =
             `p50: ${data.latency_ms.p50}ms | avg: ${data.latency_ms.avg}ms`;
-          document.getElementById("metric-memory").innerText =
-            data.resources.memory_usage_mb + " MB";
-          document.getElementById("metric-memory-pct").innerText =
+          document.getElementById('metric-memory').innerText =
+            data.resources.memory_usage_mb + ' MB';
+          document.getElementById('metric-memory-pct').innerText =
             `${data.resources.memory_percentage}% of ${data.resources.memory_limit_mb} MB limit`;
-          document.getElementById("metric-version").innerText = data.version;
+          document.getElementById('metric-version').innerText = data.version;
 
           // Health & active incident UI
-          const badge = document.getElementById("health-badge");
-          const activeLabel = document.getElementById("active-incident-label");
+          const badge = document.getElementById('health-badge');
+          const activeLabel = document.getElementById('active-incident-label');
           activeLabel.innerText =
-            "Incident: " +
-            (data.active_incident === "none"
-              ? "None (Baseline)"
-              : data.active_incident);
+            'Incident: ' +
+            (data.active_incident === 'none' ? 'None (Baseline)' : data.active_incident);
 
-          document
-            .querySelectorAll(".btn-incident")
-            .forEach((b) => b.classList.remove("active"));
-          if (data.active_incident !== "none") {
-            const btn = document.getElementById("btn-" + data.active_incident);
-            if (btn) btn.classList.add("active");
+          document.querySelectorAll('.btn-incident').forEach((b) => b.classList.remove('active'));
+          if (data.active_incident !== 'none') {
+            const btn = document.getElementById('btn-' + data.active_incident);
+            if (btn) btn.classList.add('active');
           }
 
-          if (data.active_incident === "service_unavailable") {
-            badge.className = "badge badge-down";
-            badge.innerText = "CRITICAL (503)";
-          } else if (data.active_incident !== "none") {
-            badge.className = "badge badge-degraded";
-            badge.innerText = "DEGRADED";
+          if (data.active_incident === 'service_unavailable') {
+            badge.className = 'badge badge-down';
+            badge.innerText = 'CRITICAL (503)';
+          } else if (data.active_incident !== 'none') {
+            badge.className = 'badge badge-degraded';
+            badge.innerText = 'DEGRADED';
           } else {
-            badge.className = "badge badge-healthy";
-            badge.innerText = "HEALTHY";
+            badge.className = 'badge badge-healthy';
+            badge.innerText = 'HEALTHY';
           }
         } catch (err) {
-          console.error("Metrics fetch error", err);
+          console.error('Metrics fetch error', err);
         }
       }
 
       async function triggerIncident(type) {
         try {
-          const res = await fetch("/admin/incidents/" + type, {
-            method: "POST",
+          const res = await fetch('/admin/incidents/' + type, {
+            method: 'POST',
             headers: {
-              "Content-Type": "application/json",
-              "x-admin-key": ADMIN_KEY,
+              'Content-Type': 'application/json',
+              'x-admin-key': ADMIN_KEY,
             },
           });
           const data = await res.json();
-          document.getElementById("response-output").innerText = JSON.stringify(
-            data,
-            null,
-            2,
-          );
+          document.getElementById('response-output').innerText = JSON.stringify(data, null, 2);
           await refreshMetrics();
           await fetchLogs();
         } catch (err) {
-          alert("Failed to trigger incident: " + err.message);
+          alert('Failed to trigger incident: ' + err.message);
         }
       }
 
       async function resetIncident() {
         try {
-          const res = await fetch("/admin/reset", {
-            method: "POST",
+          const res = await fetch('/admin/reset', {
+            method: 'POST',
             headers: {
-              "Content-Type": "application/json",
-              "x-admin-key": ADMIN_KEY,
+              'Content-Type': 'application/json',
+              'x-admin-key': ADMIN_KEY,
             },
           });
           const data = await res.json();
-          document.getElementById("response-output").innerText = JSON.stringify(
-            data,
-            null,
-            2,
-          );
+          document.getElementById('response-output').innerText = JSON.stringify(data, null, 2);
           await refreshMetrics();
           await fetchLogs();
         } catch (err) {
-          alert("Failed to reset: " + err.message);
+          alert('Failed to reset: ' + err.message);
         }
       }
 
       async function probeEndpoint(path) {
-        const output = document.getElementById("response-output");
+        const output = document.getElementById('response-output');
         output.innerText = `Sending GET ${path}...`;
         const t0 = performance.now();
         try {
@@ -509,24 +478,24 @@
 
       async function fetchLogs() {
         try {
-          const res = await fetch("/api/logs?limit=30");
+          const res = await fetch('/api/logs?limit=30');
           const data = await res.json();
-          const container = document.getElementById("logs-container");
+          const container = document.getElementById('logs-container');
           container.innerHTML = data.logs
             .map(
               (log) => `
           <div class="log-row">
             <span class="log-time">${new Date(log.timestamp).toLocaleTimeString()}</span>
             <span class="log-${log.level}">[${log.level}]</span>
-            <span style="color: ${log.level === "ERROR" ? "#f85149" : "#c9d1d9"}">
-              ${log.endpoint ? `<b>[${log.endpoint}]</b> ` : ""}${log.message}
+            <span style="color: ${log.level === 'ERROR' ? '#f85149' : '#c9d1d9'}">
+              ${log.endpoint ? `<b>[${log.endpoint}]</b> ` : ''}${log.message}
             </span>
           </div>
-        `,
+        `
             )
-            .join("");
+            .join('');
         } catch (err) {
-          console.error("Logs fetch error", err);
+          console.error('Logs fetch error', err);
         }
       }
 

@@ -4,14 +4,14 @@
  * Run with: npm run traffic
  */
 
-const BASE_URL = process.env.BASE_URL || "http://localhost:8000";
-const INTERVAL_MS = parseInt(process.env.INTERVAL_MS || "1000", 10);
+const BASE_URL = process.env.BASE_URL || 'http://localhost:8000';
+const INTERVAL_MS = parseInt(process.env.INTERVAL_MS || '1000', 10);
 
 const ENDPOINTS = [
-  { path: "/health", weight: 4 },
-  { path: "/api/users", weight: 3 },
-  { path: "/api/orders", weight: 5 },
-  { path: "/api/metrics", weight: 1 },
+  { path: '/health', weight: 4 },
+  { path: '/api/users', weight: 3 },
+  { path: '/api/orders', weight: 5 },
+  { path: '/api/metrics', weight: 1 },
 ];
 
 function selectEndpoint(): string {
@@ -23,7 +23,7 @@ function selectEndpoint(): string {
     }
     random -= ep.weight;
   }
-  return "/health";
+  return '/health';
 }
 
 async function sendRequest() {
@@ -32,24 +32,17 @@ async function sendRequest() {
   try {
     const res = await fetch(`${BASE_URL}${ep}`);
     const elapsed = Date.now() - t0;
-    const color =
-      res.status >= 500
-        ? "\x1b[31m"
-        : res.status >= 400
-          ? "\x1b[33m"
-          : "\x1b[32m";
+    const color = res.status >= 500 ? '\x1b[31m' : res.status >= 400 ? '\x1b[33m' : '\x1b[32m';
     console.log(
-      `${color}[${new Date().toISOString()}] ${res.status} GET ${ep} (${elapsed}ms)\x1b[0m`,
+      `${color}[${new Date().toISOString()}] ${res.status} GET ${ep} (${elapsed}ms)\x1b[0m`
     );
   } catch (err: any) {
-    console.error(
-      `\x1b[31m[${new Date().toISOString()}] ERROR GET ${ep}: ${err.message}\x1b[0m`,
-    );
+    console.error(`\x1b[31m[${new Date().toISOString()}] ERROR GET ${ep}: ${err.message}\x1b[0m`);
   }
 }
 
 console.log(
-  `\n🚀 Synthetic traffic generator started against ${BASE_URL} (Interval: ${INTERVAL_MS}ms)`,
+  `\n🚀 Synthetic traffic generator started against ${BASE_URL} (Interval: ${INTERVAL_MS}ms)`
 );
 console.log(`Press Ctrl+C to stop.\n`);
 

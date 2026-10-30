@@ -69,9 +69,7 @@
               "raw": "{{baseUrl}}/api/logs?limit=50",
               "host": ["{{baseUrl}}"],
               "path": ["api", "logs"],
-              "query": [
-                { "key": "limit", "value": "50" }
-              ]
+              "query": [{ "key": "limit", "value": "50" }]
             },
             "description": "Returns recent structured logs from the in-memory circular buffer."
           }
@@ -128,9 +126,7 @@
           "name": "GET /admin/status (Current Incident Status)",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "x-admin-key", "value": "{{adminApiKey}}", "type": "text" }
-            ],
+            "header": [{ "key": "x-admin-key", "value": "{{adminApiKey}}", "type": "text" }],
             "url": {
               "raw": "{{baseUrl}}/admin/status",
               "host": ["{{baseUrl}}"],
@@ -294,4 +290,3 @@
     }
   ]
 }
-
