@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI-SRE Incident Simulation Dashboard</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --card-bg: #161b22;
+        --border: #30363d;
+        --text: #c9d1d9;
+        --text-muted: #8b949e;
+        --accent: #58a6ff;
+        --success: #3fb950;
+        --warning: #d29922;
+        --danger: #f85149;
+        --purple: #bc8cff;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        padding: 24px;
+        min-height: 100vh;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 18px;
+        margin-bottom: 24px;
+      }
+      .header h1 {
+        font-size: 24px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .badge-healthy {
+        background: rgba(63, 185, 80, 0.2);
+        color: var(--success);
+        border: 1px solid var(--success);
+      }
+      .badge-degraded {
+        background: rgba(210, 153, 34, 0.2);
+        color: var(--warning);
+        border: 1px solid var(--warning);
+      }
+      .badge-down {
+        background: rgba(248, 81, 73, 0.2);
+        color: var(--danger);
+        border: 1px solid var(--danger);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 18px;
+      }
+      .card h3 {
+        font-size: 14px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+      }
+      .card .val {
+        font-size: 28px;
+        font-weight: 700;
+        color: #fff;
+      }
+      .card .sub {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 4px;
+      }
+
+      .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .incidents-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+      .btn {
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        text-align: left;
+      }
+      .btn-incident {
+        background: #21262d;
+        border-color: var(--border);
+        color: #fff;
+      }
+      .btn-incident:hover {
+        border-color: var(--danger);
+        background: rgba(248, 81, 73, 0.1);
+        color: var(--danger);
+      }
+      .btn-incident.active {
+        background: rgba(248, 81, 73, 0.25);
+        border-color: var(--danger);
+        color: #ff7b72;
+      }
+      .btn-reset {
+        background: rgba(63, 185, 80, 0.15);
+        border-color: var(--success);
+        color: var(--success);
+      }
+      .btn-reset:hover {
+        background: rgba(63, 185, 80, 0.3);
+      }
+
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      @media (max-width: 900px) {
+        .two-col {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .test-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .btn-test {
+        background: #21262d;
+        border-color: var(--border);
+        color: var(--accent);
+        font-size: 12px;
+        padding: 6px 12px;
+      }
+      .btn-test:hover {
+        background: #30363d;
+      }
+
+      pre {
+        background: #000;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 12px;
+        font-size: 12px;
+        color: #7ee787;
+        overflow-x: auto;
+        max-height: 280px;
+      }
+      .logs-box {
+        max-height: 380px;
+        overflow-y: auto;
+        background: #000;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 8px;
+        font-size: 12px;
+      }
+      .log-row {
+        padding: 4px 6px;
+        border-bottom: 1px solid #1c2128;
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+      }
+      .log-INFO {
+        color: #58a6ff;
+      }
+      .log-WARN {
+        color: #d29922;
+      }
+      .log-ERROR {
+        color: #f85149;
+        font-weight: 600;
+      }
+      .log-time {
+        color: var(--text-muted);
+        font-size: 11px;
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div>
+        <h1>🚨 AI-SRE Demo Target Service</h1>
+        <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px">
+          Microservice Failure Simulator for Autonomous SRE Agent Diagnostics
+        </p>
+      </div>
+      <div style="text-align: right">
+        <span id="health-badge" class="badge badge-healthy">HEALTHY</span>
+        <div
+          id="active-incident-label"
+          style="font-size: 12px; color: var(--text-muted); margin-top: 4px"
+        >
+          Incident: None
+        </div>
+      </div>
+    </div>
+
+    <!-- Realtime Metrics Cards -->
+    <div class="grid">
+      <div class="card">
+        <h3>Error Rate</h3>
+        <div class="val" id="metric-error-rate">0.0%</div>
+        <div class="sub" id="metric-errors-count">0 / 0 failed requests</div>
+      </div>
+      <div class="card">
+        <h3>Latency (p95)</h3>
+        <div class="val" id="metric-p95">24ms</div>
+        <div class="sub" id="metric-avg-latency">p50: 15ms | avg: 18ms</div>
+      </div>
+      <div class="card">
+        <h3>Memory Pressure</h3>
+        <div class="val" id="metric-memory">135 MB</div>
+        <div class="sub" id="metric-memory-pct">
+          26.4% of 512 MB cgroup limit
+        </div>
+      </div>
+      <div class="card">
+        <h3>Active Version</h3>
+        <div class="val" id="metric-version">v2.4.1</div>
+        <div class="sub">Service: order-service</div>
+      </div>
+    </div>
+
+    <!-- Incident Injection Control Panel -->
+    <div class="section-title">
+      <span>Simulate Incidents (Admin Injection)</span>
+      <button class="btn btn-reset" onclick="resetIncident()">
+        ↺ Restore Normal Operation
+      </button>
+    </div>
+    <div class="incidents-grid">
+      <button
+        class="btn btn-incident"
+        id="btn-http_500"
+        onclick="triggerIncident('http_500')"
+      >
+        💥 1. HTTP 500 errors
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px">
+          NullPointer in payment serializer
+        </div>
+      </button>
+      <button
+        class="btn btn-incident"
+        id="btn-database_failure"
+        onclick="triggerIncident('database_failure')"
+      >
+        🗄️ 2. Database failure
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px">
+          5000ms Postgres pool timeout
+        </div>
+      </button>
+      <button
+        class="btn btn-incident"
+        id="btn-high_latency"
+        onclick="triggerIncident('high_latency')"
+      >
+        ⏳ 3. High latency
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px">
+          Requests take 3.5s - 4.5s
+        </div>
+      </button>
+      <button
+        class="btn btn-incident"
+        id="btn-service_unavailable"
+        onclick="triggerIncident('service_unavailable')"
+      >
+        ⛔ 4. Service unavailable
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px">
+          GET /health returns 503
+        </div>
+      </button>
+      <button
+        class="btn btn-incident"
+        id="btn-bad_deployment"
+        onclick="triggerIncident('bad_deployment')"
+      >
+        🚀 5. Bad deployment
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px">
+          v2.4.2 buggy discount engine
+        </div>
+      </button>
+      <button
+        class="btn btn-incident"
+        id="btn-memory_pressure"
+        onclick="triggerIncident('memory_pressure')"
+      >
+        🧠 6. Memory pressure
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px">
+          RSS spikes to 94.8% limit
+        </div>
+      </button>
+      <button
+        class="btn btn-incident"
+        id="btn-rate_limiting"
+        onclick="triggerIncident('rate_limiting')"
+      >
+        🛑 7. Rate limiting
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px">
+          Returns HTTP 429 quota reached
+        </div>
+      </button>
+    </div>
+
+    <!-- Lower Section: Live Response Tester + Live Logs Viewer -->
+    <div class="two-col">
+      <div>
+        <div class="section-title">
+          <span>Endpoint Inspector</span>
+        </div>
+        <div class="test-buttons">
+          <button class="btn btn-test" onclick="probeEndpoint('/health')">
+            GET /health
+          </button>
+          <button class="btn btn-test" onclick="probeEndpoint('/api/orders')">
+            GET /api/orders
+          </button>
+          <button class="btn btn-test" onclick="probeEndpoint('/api/users')">
+            GET /api/users
+          </button>
+          <button class="btn btn-test" onclick="probeEndpoint('/api/metrics')">
+            GET /api/metrics
+          </button>
+          <button
+            class="btn btn-test"
+            onclick="probeEndpoint('/api/deployments')"
+          >
+            GET /api/deployments
+          </button>
+        </div>
+        <pre id="response-output">
+// Click an endpoint above to probe current response...</pre
+        >
+      </div>
+
+      <div>
+        <div class="section-title">
+          <span>Live Structured Diagnostic Logs</span>
+          <button
+            class="btn btn-test"
+            style="font-size: 11px; padding: 2px 8px"
+            onclick="fetchLogs()"
+          >
+            Refresh
+          </button>
+        </div>
+        <div class="logs-box" id="logs-container">
+          <!-- Live logs populated here -->
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const ADMIN_KEY = "sre-demo-secret-key-2026";
+
+      async function refreshMetrics() {
+        try {
+          const res = await fetch("/api/metrics");
+          const data = await res.json();
+
+          document.getElementById("metric-error-rate").innerText =
+            data.requests.error_rate_percentage + "%";
+          document.getElementById("metric-errors-count").innerText =
+            `${data.requests.client_error_4xx + data.requests.server_error_5xx} / ${data.requests.total} failed requests`;
+          document.getElementById("metric-p95").innerText =
+            data.latency_ms.p95 + "ms";
+          document.getElementById("metric-avg-latency").innerText =
+            `p50: ${data.latency_ms.p50}ms | avg: ${data.latency_ms.avg}ms`;
+          document.getElementById("metric-memory").innerText =
+            data.resources.memory_usage_mb + " MB";
+          document.getElementById("metric-memory-pct").innerText =
+            `${data.resources.memory_percentage}% of ${data.resources.memory_limit_mb} MB limit`;
+          document.getElementById("metric-version").innerText = data.version;
+
+          // Health & active incident UI
+          const badge = document.getElementById("health-badge");
+          const activeLabel = document.getElementById("active-incident-label");
+          activeLabel.innerText =
+            "Incident: " +
+            (data.active_incident === "none"
+              ? "None (Baseline)"
+              : data.active_incident);
+
+          document
+            .querySelectorAll(".btn-incident")
+            .forEach((b) => b.classList.remove("active"));
+          if (data.active_incident !== "none") {
+            const btn = document.getElementById("btn-" + data.active_incident);
+            if (btn) btn.classList.add("active");
+          }
+
+          if (data.active_incident === "service_unavailable") {
+            badge.className = "badge badge-down";
+            badge.innerText = "CRITICAL (503)";
+          } else if (data.active_incident !== "none") {
+            badge.className = "badge badge-degraded";
+            badge.innerText = "DEGRADED";
+          } else {
+            badge.className = "badge badge-healthy";
+            badge.innerText = "HEALTHY";
+          }
+        } catch (err) {
+          console.error("Metrics fetch error", err);
+        }
+      }
+
+      async function triggerIncident(type) {
+        try {
+          const res = await fetch("/admin/incidents/" + type, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-admin-key": ADMIN_KEY,
+            },
+          });
+          const data = await res.json();
+          document.getElementById("response-output").innerText = JSON.stringify(
+            data,
+            null,
+            2,
+          );
+          await refreshMetrics();
+          await fetchLogs();
+        } catch (err) {
+          alert("Failed to trigger incident: " + err.message);
+        }
+      }
+
+      async function resetIncident() {
+        try {
+          const res = await fetch("/admin/reset", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-admin-key": ADMIN_KEY,
+            },
+          });
+          const data = await res.json();
+          document.getElementById("response-output").innerText = JSON.stringify(
+            data,
+            null,
+            2,
+          );
+          await refreshMetrics();
+          await fetchLogs();
+        } catch (err) {
+          alert("Failed to reset: " + err.message);
+        }
+      }
+
+      async function probeEndpoint(path) {
+        const output = document.getElementById("response-output");
+        output.innerText = `Sending GET ${path}...`;
+        const t0 = performance.now();
+        try {
+          const res = await fetch(path);
+          const t1 = performance.now();
+          const json = await res.json();
+          output.innerText =
+            `HTTP ${res.status} ${res.statusText} (${Math.round(t1 - t0)}ms)\n\n` +
+            JSON.stringify(json, null, 2);
+          await refreshMetrics();
+          await fetchLogs();
+        } catch (err) {
+          output.innerText = `Error: ${err.message}`;
+        }
+      }
+
+      async function fetchLogs() {
+        try {
+          const res = await fetch("/api/logs?limit=30");
+          const data = await res.json();
+          const container = document.getElementById("logs-container");
+          container.innerHTML = data.logs
+            .map(
+              (log) => `
+          <div class="log-row">
+            <span class="log-time">${new Date(log.timestamp).toLocaleTimeString()}</span>
+            <span class="log-${log.level}">[${log.level}]</span>
+            <span style="color: ${log.level === "ERROR" ? "#f85149" : "#c9d1d9"}">
+              ${log.endpoint ? `<b>[${log.endpoint}]</b> ` : ""}${log.message}
+            </span>
+          </div>
+        `,
+            )
+            .join("");
+        } catch (err) {
+          console.error("Logs fetch error", err);
+        }
+      }
+
+      // Auto-refresh periodic polling
+      setInterval(refreshMetrics, 3000);
+      setInterval(fetchLogs, 5000);
+
+      // Initial load
+      refreshMetrics();
+      fetchLogs();
+    </script>
+  </body>
+</html>

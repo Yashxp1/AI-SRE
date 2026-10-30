@@ -1,0 +1,297 @@
+{
+  "info": {
+    "name": "AI-SRE Demo App API",
+    "_postman_id": "c002b407-sre-demo-collection",
+    "description": "Postman collection for testing the AI-SRE Target Demo Service and incident simulations.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "adminApiKey",
+      "value": "sre-demo-secret-key-2026",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Observability & Application APIs",
+      "item": [
+        {
+          "name": "GET /health (Check Service Health)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Reports health of service and dependencies (DB, Cache, Disk). Returns 200 normally, 503 under service_unavailable or database_failure."
+          }
+        },
+        {
+          "name": "GET /api/users (Healthy Control Endpoint)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            },
+            "description": "Sample working API that always stays healthy (200 OK)."
+          }
+        },
+        {
+          "name": "GET /api/orders (Target API that fails)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"]
+            },
+            "description": "Business API that reflects current incidents (500 on bug, 500 on DB timeout, slow response on high latency, 429 on rate limit, etc.)."
+          }
+        },
+        {
+          "name": "GET /api/logs (All Recent Logs)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/logs?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "logs"],
+              "query": [
+                { "key": "limit", "value": "50" }
+              ]
+            },
+            "description": "Returns recent structured logs from the in-memory circular buffer."
+          }
+        },
+        {
+          "name": "GET /api/logs (Filter by ERROR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/logs?level=ERROR&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "logs"],
+              "query": [
+                { "key": "level", "value": "ERROR" },
+                { "key": "limit", "value": "20" }
+              ]
+            },
+            "description": "Filter application logs specifically for errors and stack traces."
+          }
+        },
+        {
+          "name": "GET /api/metrics (Golden Signals)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "metrics"]
+            },
+            "description": "Returns error rate %, p50/p95/p99 latency, request counts, and simulated cgroup memory/CPU."
+          }
+        },
+        {
+          "name": "GET /api/deployments (Deployment History)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/deployments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "deployments"]
+            },
+            "description": "Returns deployment timeline. Under bad_deployment, reveals v2.4.2-buggy deployed minutes ago."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Incident Fault Injection (Admin)",
+      "item": [
+        {
+          "name": "GET /admin/status (Current Incident Status)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-admin-key", "value": "{{adminApiKey}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "status"]
+            }
+          }
+        },
+        {
+          "name": "POST /admin/incidents/http_500",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "x-admin-key", "value": "{{adminApiKey}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Payment serializer null pointer\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/incidents/http_500",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "incidents", "http_500"]
+            }
+          }
+        },
+        {
+          "name": "POST /admin/incidents/database_failure",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "x-admin-key", "value": "{{adminApiKey}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dbHost\": \"db-primary.internal:5432\",\n  \"timeoutMs\": 5000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/incidents/database_failure",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "incidents", "database_failure"]
+            }
+          }
+        },
+        {
+          "name": "POST /admin/incidents/high_latency",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "x-admin-key", "value": "{{adminApiKey}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latencyMs\": 3800\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/incidents/high_latency",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "incidents", "high_latency"]
+            }
+          }
+        },
+        {
+          "name": "POST /admin/incidents/service_unavailable",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "x-admin-key", "value": "{{adminApiKey}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/incidents/service_unavailable",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "incidents", "service_unavailable"]
+            }
+          }
+        },
+        {
+          "name": "POST /admin/incidents/bad_deployment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "x-admin-key", "value": "{{adminApiKey}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"badVersion\": \"v2.4.2-buggy\",\n  \"commitHash\": \"f92a3c1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/incidents/bad_deployment",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "incidents", "bad_deployment"]
+            }
+          }
+        },
+        {
+          "name": "POST /admin/incidents/memory_pressure",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "x-admin-key", "value": "{{adminApiKey}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"simulatedMemoryUsageMb\": 485.6\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/incidents/memory_pressure",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "incidents", "memory_pressure"]
+            }
+          }
+        },
+        {
+          "name": "POST /admin/incidents/rate_limiting",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "x-admin-key", "value": "{{adminApiKey}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"retryAfterSeconds\": 60\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/incidents/rate_limiting",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "incidents", "rate_limiting"]
+            }
+          }
+        },
+        {
+          "name": "POST /admin/reset (Restore Normal Operation)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "x-admin-key", "value": "{{adminApiKey}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/reset",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "reset"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+

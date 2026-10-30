@@ -1,0 +1,23 @@
+services:
+  order-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: order-service-demo
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=production
+      - PORT=8000
+      - SERVICE_NAME=order-service
+      - SERVICE_VERSION=v2.4.1
+      - ADMIN_API_KEY=sre-demo-secret-key-2026
+      - ALLOW_LOCAL_ADMIN=true
+      - CGROUP_MEMORY_LIMIT_MB=512.0
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    restart: unless-stopped
+
