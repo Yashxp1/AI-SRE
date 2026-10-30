@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: order-service-demo
     ports:
-      - "8000:8000"
+      - '8000:8000'
     environment:
       - NODE_ENV=production
       - PORT=8000
@@ -20,4 +20,3 @@ services:
           cpus: '1.0'
           memory: 512M
     restart: unless-stopped
-
