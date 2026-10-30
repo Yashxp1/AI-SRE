@@ -9,7 +9,10 @@
     "build": "tsc && node --input-type=module -e \"import fs from 'fs'; fs.cpSync('src/static', 'dist/static', {recursive: true})\"",
     "start": "node dist/index.js",
     "test:incidents": "tsx src/scripts/test-incidents.ts",
-    "traffic": "tsx src/scripts/traffic-generator.ts"
+    "traffic": "tsx src/scripts/traffic-generator.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "prettier --check ."
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -20,6 +23,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.0",
+    "prettier": "^3.9.10",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   }
