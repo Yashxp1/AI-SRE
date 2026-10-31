@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { fetchTarget, requestErrorMessage } from './http.js';
 
 export interface HealthCheckResult {
   status: string;
@@ -13,7 +14,7 @@ export interface HealthCheckResult {
 export async function checkHealth(): Promise<HealthCheckResult> {
   const url = `${config.targetServiceUrl}/health`;
   try {
-    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    const res = await fetchTarget(url, { headers: { Accept: 'application/json' } });
     const json = (await res.json()) as any;
     return {
       status: json.status || (res.status === 200 ? 'healthy' : 'unhealthy'),
@@ -28,7 +29,7 @@ export async function checkHealth(): Promise<HealthCheckResult> {
     return {
       status: 'unreachable',
       statusCode: 0,
-      error: `Failed to connect to health probe at ${url}: ${err.message}`,
+      error: `Failed to connect to health probe at ${url}: ${requestErrorMessage(err)}`,
     };
   }
 }

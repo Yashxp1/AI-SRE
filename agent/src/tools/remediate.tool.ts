@@ -1,4 +1,9 @@
 import { config } from '../config.js';
+import { fetchTarget, requestErrorMessage } from './http.js';
+
+export const supportedAutomaticRemediationActions = ['RESET_STATE'] as const;
+export type SupportedAutomaticRemediationAction =
+  (typeof supportedAutomaticRemediationActions)[number];
 
 export interface RemediationResult {
   action: string;
@@ -10,9 +15,19 @@ export interface RemediationResult {
 export async function triggerRemediation(
   action: string = 'RESET_STATE'
 ): Promise<RemediationResult> {
+  if (
+    !supportedAutomaticRemediationActions.includes(action as SupportedAutomaticRemediationAction)
+  ) {
+    return {
+      action,
+      success: false,
+      message: `The demo target only supports automatic ${supportedAutomaticRemediationActions.join(', ')}. ${action} must be performed by an operator.`,
+    };
+  }
+
   const url = `${config.targetServiceUrl}/admin/reset`;
   try {
-    const res = await fetch(url, {
+    const res = await fetchTarget(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -34,25 +49,7 @@ export async function triggerRemediation(
     return {
       action,
       success: false,
-      message: `Failed to invoke remediation on ${url}: ${err.message}`,
+      message: `Failed to invoke remediation on ${url}: ${requestErrorMessage(err)}`,
     };
   }
 }
-
-export const triggerRemediationDeclaration = {
-  type: 'function',
-  name: 'trigger_remediation',
-  description:
-    'Executes an automated remediation action on the target service (e.g. resetting fault state, clearing pool connections, restoring normal traffic).',
-  parameters: {
-    type: 'object',
-    properties: {
-      action: {
-        type: 'string',
-        enum: ['RESET_STATE', 'RESTART_SERVICE', 'ROLLBACK_DEPLOYMENT'],
-        description: 'The remediation action to execute. Defaults to RESET_STATE.',
-      },
-    },
-    required: [],
-  },
-};

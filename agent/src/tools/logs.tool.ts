@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { fetchTarget, requestErrorMessage } from './http.js';
 
 export interface LogEntry {
   id: string;
@@ -30,13 +31,19 @@ export interface LogsResult {
 export async function getDiagnosticLogs(options: GetLogsOptions = {}): Promise<LogsResult> {
   const query = new URLSearchParams();
   if (options.level) query.append('level', options.level);
-  if (options.endpoint) query.append('endpoint', options.endpoint);
-  if (options.limit) query.append('limit', options.limit.toString());
-  if (options.sinceSeconds) query.append('since_seconds', options.sinceSeconds.toString());
+  if (options.endpoint?.startsWith('/')) query.append('endpoint', options.endpoint);
+  if (options.limit)
+    query.append('limit', Math.min(Math.max(Math.floor(options.limit), 1), 100).toString());
+  if (options.sinceSeconds) {
+    query.append(
+      'since_seconds',
+      Math.min(Math.max(Math.floor(options.sinceSeconds), 1), 86_400).toString()
+    );
+  }
 
   const url = `${config.targetServiceUrl}/api/logs?${query.toString()}`;
   try {
-    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    const res = await fetchTarget(url, { headers: { Accept: 'application/json' } });
     if (!res.ok) {
       return { statusCode: res.status, error: `Logs endpoint returned HTTP ${res.status}` };
     }
@@ -50,7 +57,7 @@ export async function getDiagnosticLogs(options: GetLogsOptions = {}): Promise<L
   } catch (err: any) {
     return {
       statusCode: 0,
-      error: `Failed to fetch logs from ${url}: ${err.message}`,
+      error: `Failed to fetch logs from ${url}: ${requestErrorMessage(err)}`,
     };
   }
 }

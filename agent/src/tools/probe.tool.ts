@@ -1,4 +1,7 @@
 import { config } from '../config.js';
+import { fetchTarget, requestErrorMessage } from './http.js';
+
+const SAFE_PROBE_PATHS = new Set(['/health', '/api/orders', '/api/users']);
 
 export interface EndpointProbeResult {
   endpoint: string;
@@ -11,11 +14,23 @@ export interface EndpointProbeResult {
 
 export async function probeEndpoint(endpoint: string): Promise<EndpointProbeResult> {
   const normalizedPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
+  if (!SAFE_PROBE_PATHS.has(normalizedPath)) {
+    return {
+      endpoint: normalizedPath,
+      statusCode: 0,
+      durationMs: 0,
+      headers: {},
+      body: null,
+      error: `Endpoint is not in the diagnostic probe allowlist: ${normalizedPath}`,
+    };
+  }
+
   const url = `${config.targetServiceUrl}${normalizedPath}`;
   const start = performance.now();
 
   try {
-    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    const res = await fetchTarget(url, { headers: { Accept: 'application/json' } });
     const durationMs = Math.round(performance.now() - start);
 
     const headers: Record<string, string> = {};
@@ -46,7 +61,7 @@ export async function probeEndpoint(endpoint: string): Promise<EndpointProbeResu
       durationMs,
       headers: {},
       body: null,
-      error: `Probe failed to ${url}: ${err.message}`,
+      error: `Probe failed to ${url}: ${requestErrorMessage(err)}`,
     };
   }
 }

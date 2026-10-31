@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { fetchTarget, requestErrorMessage } from './http.js';
 
 export interface DeploymentRecord {
   id: string;
@@ -23,7 +24,7 @@ export interface DeploymentHistoryResult {
 export async function getDeploymentHistory(): Promise<DeploymentHistoryResult> {
   const url = `${config.targetServiceUrl}/api/deployments`;
   try {
-    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    const res = await fetchTarget(url, { headers: { Accept: 'application/json' } });
     if (!res.ok) {
       return { statusCode: res.status, error: `Deployments endpoint returned HTTP ${res.status}` };
     }
@@ -38,7 +39,7 @@ export async function getDeploymentHistory(): Promise<DeploymentHistoryResult> {
   } catch (err: any) {
     return {
       statusCode: 0,
-      error: `Failed to fetch deployment history from ${url}: ${err.message}`,
+      error: `Failed to fetch deployment history from ${url}: ${requestErrorMessage(err)}`,
     };
   }
 }

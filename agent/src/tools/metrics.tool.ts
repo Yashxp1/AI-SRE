@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { fetchTarget, requestErrorMessage } from './http.js';
 
 export interface ServiceMetricsResult {
   statusCode: number;
@@ -32,7 +33,7 @@ export interface ServiceMetricsResult {
 export async function getMetrics(): Promise<ServiceMetricsResult> {
   const url = `${config.targetServiceUrl}/api/metrics`;
   try {
-    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    const res = await fetchTarget(url, { headers: { Accept: 'application/json' } });
     if (!res.ok) {
       return {
         statusCode: res.status,
@@ -53,7 +54,7 @@ export async function getMetrics(): Promise<ServiceMetricsResult> {
   } catch (err: any) {
     return {
       statusCode: 0,
-      error: `Failed to fetch telemetry metrics from ${url}: ${err.message}`,
+      error: `Failed to fetch telemetry metrics from ${url}: ${requestErrorMessage(err)}`,
     };
   }
 }
