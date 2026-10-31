@@ -1,42 +1,64 @@
-# 🤖 AI-SRE Autonomous Incident Diagnosis Agent
+# 🤖 AI-SRE Autonomous Incident Diagnosis Agent (LangGraph & LangChain)
 
-> **An autonomous Site Reliability Engineering AI Agent built in TypeScript that investigates microservice failures, correlates multi-modal telemetry (metrics, logs, health probes, deployment histories), and produces evidence-backed Root Cause Analysis (RCA) reports with automated remediation.**
+> **An autonomous Site Reliability Engineering AI Agent built in TypeScript using LangGraph StateGraph and LangChain. It investigates microservice outages inside Docker/Kubernetes environments, correlates multi-modal telemetry (metrics, error logs, health probes, git deployment audit trails), and synthesizes evidence-backed Root Cause Analysis (RCA) reports with automated remediation.**
 
 ---
 
-## 🌟 Resume Highlights & Key Capabilities
+## 🌟 Resume Highlights & Frameworks Used
 
-- **Autonomous ReAct Investigation Loop**: Employs reasoning + action function-calling cycles to explore service degradation without human intervention.
+- **LangGraph StateGraph (`@langchain/langgraph`)**: Orchestrates the multi-step diagnostic lifecycle through a stateful graph containing specialized nodes (`investigate`, `tools`, `synthesize`), conditional routing, and cyclic feedback loops.
+- **LangChain Structured Tools (`@langchain/core/tools`)**: Implements type-safe, read-only diagnostic tools using Zod parameter validation (`check_health`, `get_metrics`, `get_diagnostic_logs`, `get_deployment_history`, `probe_endpoint`).
+- **Google GenAI Interactions (`@google/genai`)**: Connects Gemini tool calling to the graph with server-side interaction continuation (`previous_interaction_id`).
 - **Multi-Source Telemetry Correlation**: Correlates Google SRE "Golden Signals" (error rate, p95 latency, cgroup memory limits) with circular log buffer stack traces and git deployment audit trails.
 - **Evidence-Backed Root Cause Analysis (RCA)**: Outputs strict, machine-readable JSON and human-readable Markdown diagnostic reports with confidence scoring.
-- **Automated Remediation**: Can trigger targeted remediation actions (e.g. rolling back bad deployments, clearing database connection pool locks, or resetting state).
+- **Guarded Remediation**: The model has read-only tools. Remediation requires an explicit CLI flag or an authenticated API request; this demo target can automatically reset state only, while other actions remain operator recommendations.
 - **Dual Operating Modes**:
-  1. **LLM Function-Calling Mode**: Powered by Google Gemini (`@google/genai`) using native tool declarations and iterative step execution.
+  1. **LangGraph LLM Mode**: Powered by LangGraph StateGraph + LangChain Gemini 3.8 Flash.
   2. **Deterministic Diagnostic Mode**: Telemetry heuristic engine for zero-configuration, instant offline evaluation without API keys.
 - **REST API + Webhook + CLI**: Supports command-line execution (`npm run investigate`), automated benchmark testing (`npm run benchmark`), and HTTP alert ingestion (`POST /api/investigate`).
 
 ---
 
-## 🛠️ Architecture
+## 🛠️ LangGraph StateGraph Architecture
 
 ```mermaid
 flowchart TD
-    Alert["Alert Trigger\n(PagerDuty Webhook / CLI)"] --> Agent["AI-SRE Agent Core\n(agent/src/core/agent.ts)"]
+    START([START]) --> Investigate["Node: investigate\n(Google GenAI Interactions)"]
 
-    subgraph SRE_Tools ["Agent Function-Calling Toolbelt"]
-        T1["check_health()"]
-        T2["get_metrics()"]
-        T3["get_diagnostic_logs()"]
-        T4["get_deployment_history()"]
-        T5["probe_endpoint()"]
-        T6["trigger_remediation()"]
+    Investigate --> Condition{"Has Tool Calls?"}
+    Condition -- "Yes (and turn < max)" --> Tools["Node: tools\n(LangChain StructuredTools execution)"]
+    Tools --> Investigate
+
+    Condition -- "No / Limit reached" --> Synthesize["Node: synthesize\n(Zod-valid RCA Report)"]
+    Synthesize --> END([END])
+
+    subgraph LangChain_Tools ["LangChain Toolbelt (@langchain/core/tools)"]
+        T1["checkHealthTool"]
+        T2["getMetricsTool"]
+        T3["getDiagnosticLogsTool"]
+        T4["getDeploymentHistoryTool"]
+        T5["probeEndpointTool"]
     end
 
-    Agent <--> SRE_Tools
-    SRE_Tools <--> Microservice["Target Microservice\n(demo-app on Port 8000)"]
+    Tools <--> LangChain_Tools
+    LangChain_Tools <--> Microservice["Target Microservice (demo-app on Port 8000)"]
+```
 
-    Agent --> Report["Evidence-Backed RCA Report\n(JSON Schema & Markdown)"]
-    Agent --> Remediate["Automated Remediation Action\n(POST /admin/reset)"]
+### Graph Module Layout
+
+```text
+src/core/
+  agent.ts                 # Small public facade used by the CLI and HTTP API
+  graph/
+    state.ts               # Shared LangGraph state annotation and types
+    graph.ts               # Wires nodes, edges, and conditional routing
+    routing.ts             # Chooses tools or report synthesis after each model turn
+    nodes/
+      investigate.ts       # Gemini interaction and requested tool calls
+      tools.ts             # Safe execution of diagnostic tools
+      synthesize.ts        # Validates the RCA or uses the deterministic fallback
+  heuristics.ts            # Deterministic telemetry correlation fallback
+  report-parser.ts         # Parses and validates model JSON against the RCA schema
 ```
 
 ---
@@ -63,9 +85,9 @@ cd agent
 cp .env.example .env
 ```
 
-_(Optional: Add your `GEMINI_API_KEY` in `.env` to enable live LLM function calling. If left blank, the agent runs in high-speed telemetry diagnostic mode)._
+_(Add your `GEMINI_API_KEY` in `.env` to enable live LangGraph execution. If left blank, the agent runs in high-speed telemetry diagnostic mode)._
 
-### 3. Run Autonomous Investigation via CLI
+### 3. Run Autonomous Investigation via CLI (LangGraph)
 
 ```bash
 npm run investigate
@@ -97,7 +119,7 @@ npm run dev
 
 ### Endpoints
 
-- `POST /api/investigate`: Triggers an on-demand investigation.
+- `POST /api/investigate`: Triggers an on-demand LangGraph investigation. Set `autoRemediate: true` only with the `x-agent-api-key` header and a configured `AGENT_API_KEY`.
   ```json
   {
     "incidentId": "INC-2026-99",
@@ -106,8 +128,8 @@ npm run dev
   }
   ```
 - `POST /api/webhook`: Ingests standard monitoring alerts (Alertmanager / PagerDuty / Datadog format) to queue background triage.
-- `POST /api/remediate`: Executes direct remediation action (`RESET_STATE`, `ROLLBACK_DEPLOYMENT`).
-- `GET /api/health`: Verifies agent status and LLM connection.
+- `POST /api/remediate`: Executes the demo target's only supported automated action, `RESET_STATE`; it requires `x-agent-api-key`.
+- `GET /api/health`: Verifies agent status, LangGraph orchestrator, and LLM connection.
 
 ---
 
