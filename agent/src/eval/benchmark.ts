@@ -1,6 +1,6 @@
 import { agent } from '../core/agent.js';
 import { config } from '../config.js';
-import { RootCauseCategory } from '../schemas/report.js';
+import type { RootCauseCategory } from '../schemas/report.js';
 
 interface TestCase {
   name: string;

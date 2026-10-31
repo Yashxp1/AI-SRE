@@ -1,4 +1,4 @@
-import { IncidentReport } from '../schemas/report.js';
+import type { IncidentReport } from '../schemas/report.js';
 
 export function printTerminalReport(report: IncidentReport): void {
   const line = '━'.repeat(64);

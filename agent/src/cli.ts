@@ -9,7 +9,7 @@ async function main() {
   const autoRemediate = args.includes('--remediate');
   const forceHeuristics = args.includes('--heuristics') || args.includes('--mock');
 
-  console.log(`🤖 AI-SRE Autonomous CLI Agent starting...`);
+  console.log(`🤖 AI-SRE Autonomous Agent (Powered by LangGraph & LangChain) starting...`);
 
   const report = await agent.investigate({
     incidentId,
