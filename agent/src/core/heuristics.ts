@@ -3,7 +3,7 @@ import { getMetrics } from '../tools/metrics.tool.js';
 import { getDiagnosticLogs } from '../tools/logs.tool.js';
 import { getDeploymentHistory } from '../tools/deployments.tool.js';
 import { probeEndpoint } from '../tools/probe.tool.js';
-import { IncidentReport, RootCauseCategory } from '../schemas/report.js';
+import type { IncidentReport, RootCauseCategory } from '../schemas/report.js';
 
 export async function runHeuristicInvestigation(
   incidentId: string = `INC-${Date.now().toString().slice(-4)}`
@@ -59,10 +59,10 @@ export async function runHeuristicInvestigation(
   let severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' = 'MEDIUM';
   let summary = 'Unknown system anomaly detected.';
   let detailedDiagnosis = 'Telemetry does not match any recognized failure signature.';
-  let remediationAction: any = 'RESET_STATE';
+  let remediationAction: IncidentReport['remediation']['recommendedRemediationType'] =
+    'RESET_STATE';
   let immediateAction = 'Investigate system logs and restart container.';
   let longTermFix = 'Enhance unit tests and resilience patterns.';
-  let canAutoRemediate = true;
   let confidence = 85;
 
   // Rule 1: Bad Deployment
@@ -195,7 +195,9 @@ export async function runHeuristicInvestigation(
     remediation: {
       immediateAction,
       longTermFix,
-      canAutoRemediate,
+      // The demo target exposes only /admin/reset. Other recommended actions are advisory
+      // and require an operator or an integration with the real control plane.
+      canAutoRemediate: remediationAction === 'RESET_STATE' && category !== 'UNKNOWN',
       recommendedRemediationType: remediationAction,
     },
     confidenceScore: confidence,
